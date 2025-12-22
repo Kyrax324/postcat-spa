@@ -83,47 +83,23 @@
 			<!-- Right: Main Panel (Tabs + Request/Response) -->
 			<div class="flex-1 flex flex-col overflow-hidden min-w-0">
 				<!-- Tabs Bar -->
-				<div
-					class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0"
-				>
-					<div class="flex items-center overflow-x-auto scrollbar-hide">
-						<div
-							v-for="tab in requestStore.tabs"
-							:key="tab.id"
-							class="flex items-center gap-2 px-4 py-2 border-r border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group min-w-[120px] max-w-[200px] relative"
-							:class="{
-								'text-gray-900 dark:text-white':
-									requestStore.activeTabId === tab.id,
-								'text-gray-600 dark:text-gray-400':
-									requestStore.activeTabId !== tab.id,
-							}"
-							@click="requestStore.setActiveTab(tab.id)"
-						>
-							<span class="text-sm truncate flex-1">{{ tab.name }}</span>
-							<button
-								v-if="requestStore.tabs.length > 1"
-								class="opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 rounded p-0.5 transition-opacity"
-								@click.stop="requestStore.closeTab(tab.id)"
-							>
-								✕
-							</button>
-							<div
-								v-if="requestStore.activeTabId === tab.id"
-								class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500"
-							/>
-						</div>
-						<button
-							class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
-							@click="requestStore.createTab()"
-						>
-							<Icon
-								icon="mdi:plus"
-								:width="18"
-								:height="18"
-							/>
-						</button>
-					</div>
-				</div>
+				<TabBar
+					:tabs="requestStore.tabs"
+					:groups="requestStore.groups"
+					:organized-tabs="requestStore.organizedTabs"
+					:active-tab-id="requestStore.activeTabId"
+					@select-tab="requestStore.setActiveTab"
+					@close-tab="requestStore.closeTab"
+					@create-tab="requestStore.createTab"
+					@toggle-collapse="requestStore.toggleGroupCollapse"
+					@create-group="handleCreateGroup"
+					@rename-group="handleRenameGroup"
+					@delete-group="handleDeleteGroup"
+					@change-group-color="requestStore.changeGroupColor"
+					@add-to-group="requestStore.addTabToGroup"
+					@remove-from-group="requestStore.removeTabFromGroup"
+					@close-other-tabs="handleCloseOtherTabs"
+				/>
 
 				<!-- Request/Response Area -->
 				<div
@@ -344,6 +320,15 @@
 				@close="showSettings = false"
 			/>
 		</n-modal>
+
+		<!-- Group Dialog -->
+		<GroupDialog
+			v-model:show="showGroupDialog"
+			:mode="groupDialogMode"
+			:initial-name="groupDialogInitialName"
+			:initial-color="groupDialogInitialColor"
+			@confirm="handleGroupDialogConfirm"
+		/>
 	</div>
 </template>
 
@@ -366,7 +351,10 @@
 	import VariablePicker from '@/components/VariablePicker.vue'
 	import VariableInput from '@/components/VariableInput.vue'
 	import VariableInputWithPills from '@/components/VariableInputWithPills.vue'
+	import TabBar from '@/components/TabBar/TabBar.vue'
+	import GroupDialog from '@/components/Dialogs/GroupDialog.vue'
 	import type { Endpoint } from '@/types/openapi'
+	import type { TabGroupColor } from '@/types/request'
 	import RichPillInput from '@/components/RichPillInput.vue'
 
 	const message = useMessage()
@@ -382,6 +370,13 @@
 	const settingsActiveSection = ref('profile')
 	const sidebarCollapsed = ref(false)
 	const urlInputRef = ref<any>(null)
+
+	// Group dialog state
+	const showGroupDialog = ref(false)
+	const groupDialogMode = ref<'create' | 'rename'>('create')
+	const groupDialogInitialName = ref('')
+	const groupDialogInitialColor = ref<TabGroupColor>('blue')
+	const groupDialogTargetId = ref('')
 
 	// HTTP method options with colors
 	const getMethodColor = (method: string): string => {
@@ -581,6 +576,65 @@
 	function openVariables() {
 		settingsActiveSection.value = 'variables'
 		showSettings.value = true
+	}
+
+	// Group management handlers
+	function handleCreateGroup(tabId: string) {
+		groupDialogMode.value = 'create'
+		groupDialogInitialName.value = ''
+		groupDialogInitialColor.value = 'blue'
+		groupDialogTargetId.value = tabId
+		showGroupDialog.value = true
+	}
+
+	function handleRenameGroup(groupId: string) {
+		const group = requestStore.getGroupById(groupId)
+		if (!group) return
+
+		groupDialogMode.value = 'rename'
+		groupDialogInitialName.value = group.name
+		groupDialogInitialColor.value = group.color
+		groupDialogTargetId.value = groupId
+		showGroupDialog.value = true
+	}
+
+	function handleDeleteGroup(groupId: string, mode: 'ungroup' | 'close-tabs') {
+		const group = requestStore.getGroupById(groupId)
+		if (!group) return
+
+		if (mode === 'close-tabs') {
+			const tabCount = requestStore.getTabsInGroup(groupId).length
+			if (
+				confirm(
+					`Are you sure you want to close "${group.name}" and all ${tabCount} tabs in it?`
+				)
+			) {
+				requestStore.deleteGroup(groupId, 'close-tabs')
+				message.success(`Closed group "${group.name}"`)
+			}
+		} else {
+			requestStore.deleteGroup(groupId, 'ungroup')
+			message.success(`Ungrouped tabs from "${group.name}"`)
+		}
+	}
+
+	function handleGroupDialogConfirm(name: string, color: TabGroupColor) {
+		if (groupDialogMode.value === 'create') {
+			const tabId = groupDialogTargetId.value
+			requestStore.createGroup(name, color, [tabId])
+			message.success(`Created group "${name}"`)
+		} else {
+			const groupId = groupDialogTargetId.value
+			requestStore.renameGroup(groupId, name)
+			requestStore.changeGroupColor(groupId, color)
+			message.success(`Updated group "${name}"`)
+		}
+	}
+
+	function handleCloseOtherTabs(tabId: string) {
+		const otherTabs = requestStore.tabs.filter((t) => t.id !== tabId)
+		otherTabs.forEach((tab) => requestStore.closeTab(tab.id))
+		message.success('Closed other tabs')
 	}
 
 	// Sidebar resize handlers

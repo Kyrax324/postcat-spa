@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ApiRequest, ApiResponse, RequestHistory, RequestTab } from '@/types/request'
+import type {
+	ApiRequest,
+	ApiResponse,
+	RequestHistory,
+	RequestTab,
+	TabGroup,
+	TabGroupColor,
+} from '@/types/request'
 
 const HISTORY_KEY = 'post-cat-spa-history'
 const TABS_KEY = 'post-cat-spa-tabs'
@@ -23,12 +30,40 @@ export const useRequestStore = defineStore('request', () => {
 	const tabs = ref<RequestTab[]>([])
 	const activeTabId = ref<string>('')
 	const history = ref<RequestHistory[]>([])
+	const groups = ref<TabGroup[]>([])
 
 	// Computed properties for current tab
 	const currentTab = computed(() => tabs.value.find(t => t.id === activeTabId.value))
 	const currentRequest = computed(() => currentTab.value?.request || createDefaultRequest())
 	const currentResponse = computed(() => currentTab.value?.response || null)
 	const isLoading = computed(() => currentTab.value?.isLoading || false)
+
+	// Computed properties for groups
+	const organizedTabs = computed(() => {
+		const ungrouped: RequestTab[] = []
+		const grouped: Record<string, RequestTab[]> = {}
+
+		tabs.value.forEach((tab) => {
+			if (!tab.groupId) {
+				ungrouped.push(tab)
+			} else {
+				if (!grouped[tab.groupId]) {
+					grouped[tab.groupId] = []
+				}
+				grouped[tab.groupId].push(tab)
+			}
+		})
+
+		return { ungrouped, grouped }
+	})
+
+	const getGroupById = (groupId: string) => {
+		return groups.value.find((g) => g.id === groupId)
+	}
+
+	const getTabsInGroup = (groupId: string) => {
+		return tabs.value.filter((t) => t.groupId === groupId)
+	}
 
 	// Initialize with one tab
 	function initializeTabs() {
@@ -52,8 +87,23 @@ export const useRequestStore = defineStore('request', () => {
 		if (stored) {
 			try {
 				const data = JSON.parse(stored)
-				tabs.value = data.tabs || []
-				activeTabId.value = data.activeTabId || ''
+
+				// Backward compatibility: Check for version
+				if (!data.version || data.version === 1) {
+					// Old format - just tabs
+					tabs.value = data.tabs || []
+					activeTabId.value = data.activeTabId || ''
+					groups.value = [] // No groups in old format
+				} else {
+					// New format with groups
+					tabs.value = data.tabs || []
+					activeTabId.value = data.activeTabId || ''
+					groups.value = data.groups || []
+				}
+
+				// Clean up orphaned references
+				cleanupOrphanedGroupRefs()
+
 				if (tabs.value.length === 0) {
 					initializeTabs()
 				}
@@ -68,10 +118,15 @@ export const useRequestStore = defineStore('request', () => {
 
 	// Save tabs to localStorage
 	function saveTabs() {
-		localStorage.setItem(TABS_KEY, JSON.stringify({
-			tabs: tabs.value,
-			activeTabId: activeTabId.value,
-		}))
+		localStorage.setItem(
+			TABS_KEY,
+			JSON.stringify({
+				tabs: tabs.value,
+				activeTabId: activeTabId.value,
+				groups: groups.value,
+				version: 2,
+			})
+		)
 	}
 
 	// Load history from localStorage
@@ -141,10 +196,25 @@ export const useRequestStore = defineStore('request', () => {
 
 	// Close tab
 	function closeTab(tabId: string) {
-		const index = tabs.value.findIndex(t => t.id === tabId)
+		const index = tabs.value.findIndex((t) => t.id === tabId)
 		if (index === -1) return
 
+		const closingTab = tabs.value[index]
+		const wasInGroup = closingTab.groupId
+
 		tabs.value.splice(index, 1)
+
+		// Check if this was the last tab in a group
+		if (wasInGroup) {
+			const remainingTabsInGroup = tabs.value.filter((t) => t.groupId === wasInGroup)
+			if (remainingTabsInGroup.length === 0) {
+				// Auto-delete empty group
+				const groupIndex = groups.value.findIndex((g) => g.id === wasInGroup)
+				if (groupIndex !== -1) {
+					groups.value.splice(groupIndex, 1)
+				}
+			}
+		}
 
 		// If closing active tab, switch to another
 		if (activeTabId.value === tabId) {
@@ -218,6 +288,123 @@ export const useRequestStore = defineStore('request', () => {
 		}
 	}
 
+	// Group CRUD operations
+	function createGroup(name: string, color: TabGroupColor, tabIds: string[] = []) {
+		const newGroup: TabGroup = {
+			id: Date.now().toString(),
+			name,
+			color,
+			isCollapsed: false,
+			createdAt: Date.now(),
+		}
+
+		groups.value.push(newGroup)
+
+		// Add specified tabs to the group
+		tabIds.forEach((tabId) => {
+			const tab = tabs.value.find((t) => t.id === tabId)
+			if (tab) {
+				tab.groupId = newGroup.id
+			}
+		})
+
+		saveTabs()
+		return newGroup.id
+	}
+
+	function renameGroup(groupId: string, newName: string) {
+		const group = groups.value.find((g) => g.id === groupId)
+		if (group) {
+			group.name = newName
+			saveTabs()
+		}
+	}
+
+	function changeGroupColor(groupId: string, newColor: TabGroupColor) {
+		const group = groups.value.find((g) => g.id === groupId)
+		if (group) {
+			group.color = newColor
+			saveTabs()
+		}
+	}
+
+	function toggleGroupCollapse(groupId: string) {
+		const group = groups.value.find((g) => g.id === groupId)
+		if (!group) return
+
+		group.isCollapsed = !group.isCollapsed
+
+		// If collapsing a group with the active tab, switch to another tab
+		if (group.isCollapsed) {
+			const currentTabInGroup =
+				currentTab.value && currentTab.value.groupId === groupId
+			if (currentTabInGroup) {
+				// Try to find an uncollapsed tab
+				const visibleTab = tabs.value.find((t) => {
+					if (!t.groupId) return true // Ungrouped tabs are always visible
+					const tabGroup = groups.value.find((g) => g.id === t.groupId)
+					return !tabGroup?.isCollapsed
+				})
+
+				if (visibleTab) {
+					activeTabId.value = visibleTab.id
+				}
+			}
+		}
+
+		saveTabs()
+	}
+
+	function deleteGroup(groupId: string, mode: 'ungroup' | 'close-tabs' = 'ungroup') {
+		const groupIndex = groups.value.findIndex((g) => g.id === groupId)
+		if (groupIndex === -1) return
+
+		if (mode === 'close-tabs') {
+			// Close all tabs in the group
+			const tabsToClose = tabs.value.filter((t) => t.groupId === groupId)
+			tabsToClose.forEach((tab) => closeTab(tab.id))
+		} else {
+			// Ungroup tabs (remove groupId reference)
+			tabs.value.forEach((tab) => {
+				if (tab.groupId === groupId) {
+					delete tab.groupId
+				}
+			})
+		}
+
+		// Remove the group
+		groups.value.splice(groupIndex, 1)
+		saveTabs()
+	}
+
+	function addTabToGroup(tabId: string, groupId: string) {
+		const tab = tabs.value.find((t) => t.id === tabId)
+		const group = groups.value.find((g) => g.id === groupId)
+
+		if (tab && group) {
+			tab.groupId = groupId
+			saveTabs()
+		}
+	}
+
+	function removeTabFromGroup(tabId: string) {
+		const tab = tabs.value.find((t) => t.id === tabId)
+		if (tab) {
+			delete tab.groupId
+			saveTabs()
+		}
+	}
+
+	function cleanupOrphanedGroupRefs() {
+		const groupIds = new Set(groups.value.map((g) => g.id))
+
+		tabs.value.forEach((tab) => {
+			if (tab.groupId && !groupIds.has(tab.groupId)) {
+				delete tab.groupId
+			}
+		})
+	}
+
 	// Initialize
 	loadHistory()
 	loadTabs()
@@ -230,6 +417,10 @@ export const useRequestStore = defineStore('request', () => {
 		currentResponse,
 		isLoading,
 		history,
+		groups,
+		organizedTabs,
+		getGroupById,
+		getTabsInGroup,
 		createTab,
 		closeTab,
 		setActiveTab,
@@ -240,5 +431,12 @@ export const useRequestStore = defineStore('request', () => {
 		addToHistory,
 		clearHistory,
 		loadFromHistory,
+		createGroup,
+		renameGroup,
+		changeGroupColor,
+		toggleGroupCollapse,
+		deleteGroup,
+		addTabToGroup,
+		removeTabFromGroup,
 	}
 })
