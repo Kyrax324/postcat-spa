@@ -42,4 +42,29 @@ export interface RequestTab {
 	request: ApiRequest
 	response: ApiResponse | null
 	isLoading: boolean
+	groupId?: string
+}
+
+export interface TabGroup {
+	id: string
+	name: string
+	color: TabGroupColor
+	isCollapsed: boolean
+	createdAt: number
+}
+
+export type TabGroupColor =
+	| 'gray'
+	| 'red'
+	| 'orange'
+	| 'yellow'
+	| 'green'
+	| 'blue'
+	| 'purple'
+	| 'pink'
+
+export interface TabGroupColorConfig {
+	name: TabGroupColor
+	light: string
+	dark: string
 }

@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ConsolePanel: typeof import('./src/components/Console/ConsolePanel.vue')['default']
+    GroupDialog: typeof import('./src/components/Dialogs/GroupDialog.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NBadge: typeof import('naive-ui')['NBadge']
     NButton: typeof import('naive-ui')['NButton']
@@ -40,6 +41,10 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SettingsPanel: typeof import('./src/components/Settings/SettingsPanel.vue')['default']
     Sidebar: typeof import('./src/components/Sidebar/Sidebar.vue')['default']
+    TabBar: typeof import('./src/components/TabBar/TabBar.vue')['default']
+    TabContextMenu: typeof import('./src/components/TabBar/TabContextMenu.vue')['default']
+    TabGroup: typeof import('./src/components/TabBar/TabGroup.vue')['default']
+    TabItem: typeof import('./src/components/TabBar/TabItem.vue')['default']
     VariableInput: typeof import('./src/components/VariableInput.vue')['default']
     VariableInputWithPills: typeof import('./src/components/VariableInputWithPills.vue')['default']
     VariablePicker: typeof import('./src/components/VariablePicker.vue')['default']
