@@ -347,7 +347,7 @@
 				}
 				charCount = nextCharCount
 			} else {
-				const children = Array.from(node.childNodes).reverse()
+				const children = Array.from(node.childNodes).reverse() as HTMLDivElement[]
 				nodeStack.push(...children)
 			}
 		}
@@ -367,7 +367,7 @@
 		const cursorPos = currentCursorPosition.value
 
 		// Build HTML with highlighted variables
-		const html = text.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+		const html = text.replace(/\{\{([^}]+)\}\}/g, (match, _varName) => {
 			return `<span class="variable-pill" contenteditable="true">${match}</span>`
 		})
 
@@ -394,7 +394,6 @@
 
 		// Look backwards from cursor for {{
 		let pos = cursorPos - 1
-		let openBraceCount = 0
 
 		while (pos >= 0) {
 			if (text[pos] === '}' && text[pos + 1] === '}') {
@@ -452,7 +451,7 @@
 		hasTextContent.value = text.length > 0
 
 		// Apply highlighting
-		const html = text.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
+		const html = text.replace(/\{\{([^}]+)\}\}/g, (match, _varName) => {
 			return `<span class="variable-pill" contenteditable="true">${match}</span>`
 		})
 

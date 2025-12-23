@@ -549,17 +549,6 @@
 		message.success('Default API docs path set')
 	}
 
-	function copyToClipboard(text: string) {
-		navigator.clipboard
-			.writeText(text)
-			.then(() => {
-				message.success('Copied to clipboard')
-			})
-			.catch(() => {
-				message.error('Failed to copy to clipboard')
-			})
-	}
-
 	function selectServer(serverUrl: string) {
 		settingsStore.updateSetting('selectedServerUrl', serverUrl)
 		variablesStore.setServerPath(serverUrl)

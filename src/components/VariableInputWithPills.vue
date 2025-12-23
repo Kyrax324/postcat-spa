@@ -122,7 +122,6 @@
 
 <script setup lang="ts">
 	import { ref, computed, watch, nextTick } from 'vue'
-	import { Icon } from '@iconify/vue'
 	import { useVariablesStore } from '@/stores/variables'
 
 	type ParsedPart =
@@ -211,11 +210,6 @@
 
 	function getVariableValue(key: string): string | undefined {
 		return variablesStore.getVariableValue(key)
-	}
-
-	function focusHiddenInput() {
-		hiddenInputRef.value?.focus()
-		isFocused.value = true
 	}
 
 	function handleBlur() {

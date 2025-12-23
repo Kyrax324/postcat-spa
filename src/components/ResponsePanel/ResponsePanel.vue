@@ -1,31 +1,47 @@
 <template>
-	<div class="h-full flex flex-col bg-white dark:bg-gray-800">
+	<div class="h-full flex flex-col">
 		<!-- Response Meta Info -->
 		<div
 			v-if="requestStore.currentResponse"
-			class="p-4 border-b border-gray-200 dark:border-gray-700"
+			class="p-5 border-b apple-divider"
 		>
 			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-4">
+				<div class="flex items-center gap-5">
 					<n-tag
 						:type="getStatusType(requestStore.currentResponse.status)"
 						size="medium"
 						:bordered="false"
+						class="rounded-apple shadow-apple-sm font-semibold"
 					>
 						{{ requestStore.currentResponse.status }} {{ requestStore.currentResponse.statusText }}
 					</n-tag>
-					<span class="text-sm text-gray-500 dark:text-gray-400">
-						⏱️ {{ requestStore.currentResponse.time }}ms
-					</span>
-					<span class="text-sm text-gray-500 dark:text-gray-400">
-						📦 {{ formatSize(requestStore.currentResponse.size) }}
-					</span>
+					<div class="flex items-center gap-1.5 text-sm text-apple-gray-600 dark:text-apple-gray-400">
+						<Icon
+							icon="mdi:clock-outline"
+							class="w-4 h-4"
+						/>
+						{{ requestStore.currentResponse.time }}ms
+					</div>
+					<div class="flex items-center gap-1.5 text-sm text-apple-gray-600 dark:text-apple-gray-400">
+						<Icon
+							icon="mdi:package-variant"
+							class="w-4 h-4"
+						/>
+						{{ formatSize(requestStore.currentResponse.size) }}
+					</div>
 				</div>
 				<n-button
-					size="small"
+					size="medium"
+					secondary
 					@click="copyResponse"
 				>
-					📋 Copy
+					<template #icon>
+						<Icon
+							icon="mdi:content-copy"
+							class="w-4 h-4"
+						/>
+					</template>
+					Copy
 				</n-button>
 			</div>
 		</div>
@@ -33,14 +49,15 @@
 		<!-- Empty State -->
 		<div
 			v-if="!requestStore.currentResponse"
-			class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500"
+			class="flex-1 flex items-center justify-center text-apple-gray-400 dark:text-apple-gray-500"
 		>
 			<div class="text-center">
-				<p class="text-lg mb-2">
-					📭
-				</p>
-				<p>No response yet</p>
-				<p class="text-sm mt-1">
+				<Icon
+					icon="mdi:email-outline"
+					class="w-16 h-16 mx-auto mb-4 opacity-30"
+				/>
+				<p class="text-base font-medium mb-2">No response yet</p>
+				<p class="text-sm opacity-70">
 					Send a request to see the response
 				</p>
 			</div>
@@ -54,15 +71,16 @@
 			<n-tabs
 				type="line"
 				class="h-full"
-				:tab-style="{ padding: '12px 16px' }"
+				:tab-style="{ padding: '14px 20px', fontWeight: '500' }"
 			>
 				<n-tab-pane
 					name="body"
 					tab="Body"
 				>
-					<div class="h-full overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
+					<div class="h-full overflow-y-auto scrollbar-thin p-5 bg-apple-gray-50/30 dark:bg-apple-gray-900/30">
 						<pre
 							class="text-sm font-mono whitespace-pre-wrap break-words"
+							style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height: 1.6;"
 							v-html="highlightedBody"
 						></pre>
 					</div>
@@ -72,16 +90,16 @@
 					name="headers"
 					tab="Headers"
 				>
-					<div class="p-4 space-y-2 overflow-y-auto h-full">
+					<div class="p-5 space-y-2 overflow-y-auto scrollbar-thin h-full">
 						<div
 							v-for="(value, key) in requestStore.currentResponse.headers"
 							:key="key"
-							class="flex gap-4 py-2 border-b border-gray-100 dark:border-gray-700"
+							class="flex gap-4 py-3 px-3 rounded-apple bg-apple-gray-50/50 dark:bg-apple-gray-800/30 hover:bg-apple-gray-100/80 dark:hover:bg-apple-gray-700/40 transition-colors"
 						>
-							<span class="font-semibold text-gray-700 dark:text-gray-300 min-w-[200px]">
+							<span class="font-semibold text-apple-gray-700 dark:text-apple-gray-300 min-w-[200px]">
 								{{ key }}:
 							</span>
-							<span class="text-gray-600 dark:text-gray-400 break-all">
+							<span class="text-apple-gray-600 dark:text-apple-gray-400 break-all">
 								{{ value }}
 							</span>
 						</div>
@@ -92,9 +110,10 @@
 					name="raw"
 					tab="Raw"
 				>
-					<div class="h-full overflow-y-auto p-4">
+					<div class="h-full overflow-y-auto scrollbar-thin p-5 bg-apple-gray-50/30 dark:bg-apple-gray-900/30">
 						<pre
-							class="text-sm font-mono whitespace-pre-wrap break-words text-gray-800 dark:text-gray-200"
+							class="text-sm font-mono whitespace-pre-wrap break-words text-apple-gray-800 dark:text-apple-gray-200"
+							style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height: 1.6;"
 						>{{ rawResponse }}</pre>
 					</div>
 				</n-tab-pane>
@@ -105,6 +124,7 @@
 
 <script setup lang="ts">
 	import { computed } from 'vue'
+	import { Icon } from '@iconify/vue'
 	import { useMessage } from 'naive-ui'
 	import { useRequestStore } from '@/stores/request'
 	import hljs from 'highlight.js/lib/core'

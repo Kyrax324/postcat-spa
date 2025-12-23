@@ -1,9 +1,9 @@
 <template>
-	<div class="h-full flex flex-col bg-white dark:bg-gray-800">
+	<div class="h-full flex flex-col">
 		<!-- URL Bar -->
 		<div
 			v-if="!hideUrlBar"
-			class="p-4 border-b border-gray-200 dark:border-gray-700"
+			class="p-5 border-b apple-divider"
 		>
 			<div class="flex gap-2">
 				<VariableInput
@@ -30,19 +30,20 @@
 			<n-tabs
 				type="line"
 				class="h-full"
-				:tab-style="{ padding: '12px 16px' }"
+				:tab-style="{ padding: '14px 20px', fontWeight: '500' }"
 			>
 				<n-tab-pane
 					name="params"
 					tab="Query Params"
 				>
-					<div class="p-4 space-y-2 overflow-y-auto h-full">
+					<div class="p-5 space-y-3 overflow-y-auto scrollbar-thin h-full">
 						<div
 							v-if="requestStore.currentRequest.queryParams.length > 0"
-							class="flex justify-end mb-2"
+							class="flex justify-end mb-3"
 						>
 							<n-button
 								size="small"
+								secondary
 								@click="toggleAllQueryParams"
 							>
 								{{ allQueryParamsEnabled ? 'Unselect All' : 'Select All' }}
@@ -51,36 +52,45 @@
 						<div
 							v-for="(param, index) in requestStore.currentRequest.queryParams"
 							:key="index"
-							class="flex gap-2 items-center"
+							class="flex gap-3 items-center p-3 rounded-apple bg-apple-gray-50/50 dark:bg-apple-gray-800/30 hover:bg-apple-gray-100/80 dark:hover:bg-apple-gray-700/40 transition-colors"
 						>
 							<n-checkbox v-model:checked="param.enabled" />
 							<n-input
 								v-model:value="param.key"
-								placeholder="Key"
-								size="small"
-								class="flex-1"
+								placeholder="Parameter name"
+								size="medium"
+								class="flex-1 rounded-apple"
 								@update:value="onQueryParamChange(param)"
 							/>
 							<n-input
 								v-model:value="param.value"
 								placeholder="Value"
-								size="small"
-								class="flex-1"
+								size="medium"
+								class="flex-1 rounded-apple"
 								@update:value="onQueryParamChange(param)"
 							/>
 							<n-button
 								text
 								@click="removeQueryParam(index)"
 							>
-								🗑️
+								<Icon
+									icon="mdi:delete-outline"
+									class="w-5 h-5 text-red-500"
+								/>
 							</n-button>
 						</div>
 						<n-button
 							text
-							class="w-full"
+							class="w-full rounded-apple mt-2 py-3"
 							@click="addQueryParam"
 						>
-							+ Add Query Param
+							<template #icon>
+								<Icon
+									icon="mdi:plus"
+									class="w-4 h-4"
+								/>
+							</template>
+							Add Query Param
 						</n-button>
 					</div>
 				</n-tab-pane>
@@ -89,13 +99,14 @@
 					name="headers"
 					tab="Headers"
 				>
-					<div class="p-4 space-y-2 overflow-y-auto h-full">
+					<div class="p-5 space-y-3 overflow-y-auto scrollbar-thin h-full">
 						<div
 							v-if="requestStore.currentRequest.headers.length > 0"
-							class="flex justify-end mb-2"
+							class="flex justify-end mb-3"
 						>
 							<n-button
 								size="small"
+								secondary
 								@click="toggleAllHeaders"
 							>
 								{{ allHeadersEnabled ? 'Unselect All' : 'Select All' }}
@@ -104,36 +115,45 @@
 						<div
 							v-for="(header, index) in requestStore.currentRequest.headers"
 							:key="index"
-							class="flex gap-2 items-center"
+							class="flex gap-3 items-center p-3 rounded-apple bg-apple-gray-50/50 dark:bg-apple-gray-800/30 hover:bg-apple-gray-100/80 dark:hover:bg-apple-gray-700/40 transition-colors"
 						>
 							<n-checkbox v-model:checked="header.enabled" />
 							<n-input
 								v-model:value="header.key"
-								placeholder="Key"
-								size="small"
-								class="flex-1"
+								placeholder="Header name"
+								size="medium"
+								class="flex-1 rounded-apple"
 								@update:value="onHeaderChange(header)"
 							/>
 							<n-input
 								v-model:value="header.value"
 								placeholder="Value"
-								size="small"
-								class="flex-1"
+								size="medium"
+								class="flex-1 rounded-apple"
 								@update:value="onHeaderChange(header)"
 							/>
 							<n-button
 								text
 								@click="removeHeader(index)"
 							>
-								🗑️
+								<Icon
+									icon="mdi:delete-outline"
+									class="w-5 h-5 text-red-500"
+								/>
 							</n-button>
 						</div>
 						<n-button
 							text
-							class="w-full"
+							class="w-full rounded-apple mt-2 py-3"
 							@click="addHeader"
 						>
-							+ Add Header
+							<template #icon>
+								<Icon
+									icon="mdi:plus"
+									class="w-4 h-4"
+								/>
+							</template>
+							Add Header
 						</n-button>
 					</div>
 				</n-tab-pane>
@@ -144,26 +164,39 @@
 					:disabled="!hasBody"
 				>
 					<div class="h-full flex flex-col">
-						<div class="p-4 border-b border-gray-200 dark:border-gray-700">
+						<div class="p-5 border-b apple-divider">
 							<n-radio-group
 								v-model:value="requestStore.currentRequest.bodyType"
-								size="small"
+								size="medium"
 							>
-								<n-radio-button value="json"> JSON </n-radio-button>
-								<n-radio-button value="raw"> Raw </n-radio-button>
-								<n-radio-button value="none"> None </n-radio-button>
+								<n-radio-button
+									value="json"
+									class="rounded-l-apple"
+								>
+									JSON
+								</n-radio-button>
+								<n-radio-button value="raw">
+									Raw
+								</n-radio-button>
+								<n-radio-button
+									value="none"
+									class="rounded-r-apple"
+								>
+									None
+								</n-radio-button>
 							</n-radio-group>
 						</div>
 						<div
 							v-if="requestStore.currentRequest.bodyType !== 'none'"
-							class="flex-1 p-4"
+							class="flex-1 p-5"
 						>
 							<n-input
 								v-model:value="requestStore.currentRequest.body"
 								type="textarea"
 								placeholder="Request body..."
-								:autosize="{ minRows: 10, maxRows: 20 }"
-								:input-props="{ style: 'font-family: monospace' }"
+								:autosize="{ minRows: 12, maxRows: 24 }"
+								:input-props="{ style: 'font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; line-height: 1.6;' }"
+								class="rounded-apple"
 							/>
 						</div>
 					</div>
@@ -174,13 +207,13 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, h, ref } from 'vue'
+	import { computed } from 'vue'
+	import { Icon } from '@iconify/vue'
 	import { useMessage } from 'naive-ui'
 	import { useRequestStore } from '@/stores/request'
 	import { useRequestExecutor } from '@/composables/useRequestExecutor'
 	import type { QueryParam, HttpHeader } from '@/types/request'
 	import VariableInput from '@/components/VariableInput.vue'
-	import RichPillInput from '../RichPillInput.vue'
 
 	defineProps<{
 		hideUrlBar?: boolean
@@ -189,43 +222,6 @@
 	const message = useMessage()
 	const requestStore = useRequestStore()
 	const { executeRequest } = useRequestExecutor()
-
-	const getMethodColor = (method: string): string => {
-		const colors: Record<string, string> = {
-			GET: '#10b981',
-			POST: '#eab308',
-			PUT: '#3b82f6',
-			PATCH: '#a855f7',
-			DELETE: '#ef4444',
-			HEAD: '#14b8a6',
-			OPTIONS: '#6366f1',
-		}
-		return colors[method] || '#6b7280'
-	}
-
-	const methodOptions = [
-		{ label: 'GET', value: 'GET' },
-		{ label: 'POST', value: 'POST' },
-		{ label: 'PUT', value: 'PUT' },
-		{ label: 'PATCH', value: 'PATCH' },
-		{ label: 'DELETE', value: 'DELETE' },
-		{ label: 'HEAD', value: 'HEAD' },
-		{ label: 'OPTIONS', value: 'OPTIONS' },
-	]
-
-	const renderMethodLabel = (option: { label: string; value: string }) => {
-		return h(
-			'span',
-			{
-				style: {
-					color: getMethodColor(option.value),
-					fontWeight: '600',
-					fontFamily: 'monospace',
-				},
-			},
-			option.label
-		)
-	}
 
 	const hasBody = computed(() => {
 		const method = requestStore.currentRequest.method

@@ -1,49 +1,60 @@
 <template>
-	<div class="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+	<div class="h-full flex flex-col bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-apple-gray-900 dark:via-slate-900 dark:to-blue-950">
 		<!-- Header -->
-		<div class="border-b px-2 md:px-4 py-3">
+		<div class="glass-effect border-b border-apple-gray-200/50 dark:border-apple-gray-700/50 px-4 md:px-6 py-4">
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-2 md:gap-4">
-					<div class="flex items-end md:gap-1 align-sbottom">
-						<h1 class="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-200">
-							PostCat
-						</h1>
+					<div class="flex items-center gap-3">
 						<img
 							:src="logoUrl"
 							alt="PostCat"
-							class="w-8 h-8"
+							class="w-7 h-7"
 						/>
+						<h1 class="text-xl font-semibold tracking-tight text-apple-gray-900 dark:text-white">
+							PostCat
+						</h1>
 					</div>
 					<!-- API Docs Path Selector -->
-					<div class="flex items-center gap-1">
+					<div class="flex items-center gap-2">
 						<n-select
 							v-model:value="currentApiDocsPath"
 							:options="apiDocsPathOptions"
 							placeholder="Select API Docs"
-							style="width: 200px"
-							size="small"
+							style="width: 220px"
+							size="medium"
+							class="rounded-apple"
 						/>
 						<n-button
-							size="small"
+							size="medium"
 							:loading="apiDocsStore.loading"
 							circle
+							quaternary
 							@click="handleReload"
 						>
 							<template #icon>
-								<Icon icon="mdi:reload" />
+								<Icon
+									icon="mdi:reload"
+									class="w-5 h-5"
+								/>
 							</template>
 						</n-button>
 					</div>
 				</div>
 
-				<div class="flex items-center gap-4">
+				<div class="flex items-center gap-3">
 					<!-- Variables Button -->
 					<n-button
-						size="small"
+						size="medium"
+						secondary
+						strong
+						class="rounded-apple shadow-apple-sm"
 						@click="openVariables"
 					>
 						<template #icon>
-							<Icon icon="mdi:list-box-outline" />
+							<Icon
+								icon="mdi:variable-box"
+								class="w-4 h-4"
+							/>
 						</template>
 						Variables
 					</n-button>
@@ -54,7 +65,7 @@
 			<n-alert
 				v-if="apiDocsStore.error"
 				type="error"
-				class="mt-3"
+				class="mt-4 rounded-apple shadow-apple-sm"
 				closable
 				@close="apiDocsStore.setError(null)"
 			>
@@ -68,7 +79,7 @@
 			<div
 				v-if="!sidebarCollapsed"
 				:style="{ width: `${sidebarWidth}px` }"
-				class="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0 transition-all"
+				class="bg-gradient-to-b from-white/90 to-blue-50/80 dark:from-apple-gray-800/90 dark:to-slate-900/80 backdrop-blur-apple border-r border-blue-200/50 dark:border-blue-700/30 overflow-y-auto flex-shrink-0 transition-all shadow-lg shadow-blue-500/5"
 			>
 				<Sidebar @select-endpoint="handleEndpointSelect" />
 			</div>
@@ -76,7 +87,7 @@
 			<!-- Sidebar Resizer -->
 			<div
 				v-if="!sidebarCollapsed"
-				class="w-1 hover:w-2 bg-gray-200 dark:bg-gray-700 hover:bg-primary-500 dark:hover:bg-primary-600 cursor-col-resize transition-all flex-shrink-0"
+				class="w-0.5 hover:w-1 bg-gradient-to-b from-blue-300 to-cyan-400 dark:from-blue-600 dark:to-cyan-700 hover:from-primary-500 hover:to-primary-600 cursor-col-resize transition-all flex-shrink-0 hover:shadow-lg hover:shadow-primary-500/50"
 				@mousedown="startResizeSidebar"
 			></div>
 
@@ -108,9 +119,9 @@
 				>
 					<!-- URL Bar (shared) -->
 					<div
-						class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0"
+						class="p-5 border-b border-apple-gray-200/50 dark:border-apple-gray-700/50 bg-white/60 dark:bg-apple-gray-800/60 backdrop-blur-apple flex-shrink-0"
 					>
-						<div class="flex gap-2">
+						<div class="flex gap-3">
 							<n-select
 								v-model:value="requestStore.currentRequest.method"
 								:options="methodOptions"
@@ -129,7 +140,7 @@
 									},
 									{ key: 'status', value: 'error', description: 'Error status' },
 								]"
-								@query-change="(pills, raw) => console.log(pills, raw)"
+								@query-change="(_pills: any, _raw: any) => console.log(_pills, _raw)"
 							/>
 							{{ searchQuery }}
 							<VariableInputWithPills
@@ -145,7 +156,8 @@
 								size="large"
 								:loading="requestStore.isLoading"
 								:disabled="!requestStore.currentRequest.url"
-								class="text-white"
+								strong
+								class="rounded-apple px-8 font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 border-0"
 								@click="handleSendRequest"
 							>
 								Send
@@ -159,20 +171,20 @@
 						class="flex flex-1 overflow-hidden"
 					>
 						<!-- Request Panel (without URL bar) -->
-						<div class="flex-1 flex flex-col overflow-hidden min-w-0">
+						<div class="flex-1 flex flex-col overflow-hidden min-w-0 bg-white/40 dark:bg-apple-gray-800/40 backdrop-blur-sm">
 							<RequestPanel :hide-url-bar="true" />
 						</div>
 
 						<!-- Resizer -->
 						<div
-							class="w-1 hover:w-2 bg-gray-200 dark:bg-gray-700 hover:bg-primary-500 dark:hover:bg-primary-600 cursor-col-resize transition-all flex-shrink-0"
+							class="w-0.5 hover:w-1 bg-apple-gray-300 dark:bg-apple-gray-600 hover:bg-primary-500 dark:hover:bg-primary-500 cursor-col-resize transition-all flex-shrink-0"
 							@mousedown="startResizeRequestResponse"
 						></div>
 
 						<!-- Response Panel -->
 						<div
 							:style="{ width: `${responseWidth}px` }"
-							class="border-l border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0 min-w-0"
+							class="border-l border-apple-gray-200/50 dark:border-apple-gray-700/50 overflow-hidden flex-shrink-0 min-w-0 bg-white/40 dark:bg-apple-gray-800/40 backdrop-blur-sm"
 						>
 							<ResponsePanel />
 						</div>
@@ -186,20 +198,20 @@
 						<!-- Request Panel (without URL bar) -->
 						<div
 							:style="{ height: `${requestHeight}px` }"
-							class="overflow-hidden flex-shrink-0"
+							class="overflow-hidden flex-shrink-0 bg-white/40 dark:bg-apple-gray-800/40 backdrop-blur-sm"
 						>
 							<RequestPanel :hide-url-bar="true" />
 						</div>
 
 						<!-- Resizer -->
 						<div
-							class="h-1 hover:h-2 bg-gray-200 dark:bg-gray-700 hover:bg-primary-500 dark:hover:bg-primary-600 cursor-row-resize transition-all flex-shrink-0"
+							class="h-0.5 hover:h-1 bg-apple-gray-300 dark:bg-apple-gray-600 hover:bg-primary-500 dark:hover:bg-primary-500 cursor-row-resize transition-all flex-shrink-0"
 							@mousedown="startResizeRequestResponseVertical"
 						></div>
 
 						<!-- Response Panel -->
 						<div
-							class="flex-1 border-t border-gray-200 dark:border-gray-700 overflow-hidden min-h-0"
+							class="flex-1 border-t border-apple-gray-200/50 dark:border-apple-gray-700/50 overflow-hidden min-h-0 bg-white/40 dark:bg-apple-gray-800/40 backdrop-blur-sm"
 						>
 							<ResponsePanel />
 						</div>
@@ -211,7 +223,7 @@
 		<!-- Console Resizer -->
 		<div
 			v-if="consoleStore.isVisible"
-			class="h-1 hover:h-2 bg-gray-200 dark:bg-gray-700 hover:bg-primary-500 dark:hover:bg-primary-600 cursor-row-resize transition-all flex-shrink-0"
+			class="h-0.5 hover:h-1 bg-apple-gray-300 dark:bg-apple-gray-600 hover:bg-primary-500 dark:hover:bg-primary-500 cursor-row-resize transition-all flex-shrink-0"
 			@mousedown="startResizeConsole"
 		></div>
 
@@ -219,28 +231,28 @@
 		<div
 			v-if="consoleStore.isVisible"
 			:style="{ height: `${consoleHeight}px` }"
-			class="border-t border-gray-200 dark:border-gray-700 flex-shrink-0"
+			class="border-t border-apple-gray-200/50 dark:border-apple-gray-700/50 flex-shrink-0 bg-white/60 dark:bg-apple-gray-800/60 backdrop-blur-apple"
 		>
 			<ConsolePanel />
 		</div>
 
 		<!-- Bottom Status Bar -->
 		<div
-			class="bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 py-1 flex items-center justify-between text-gray-700 dark:text-gray-300 text-xs flex-shrink-0"
+			class="glass-effect border-t border-apple-gray-200/50 dark:border-apple-gray-700/50 px-4 py-2 flex items-center justify-between text-apple-gray-600 dark:text-apple-gray-300 text-xs flex-shrink-0"
 		>
 			<div class="flex items-center gap-3">
 				<!-- Collapse Sidebar Button -->
 				<n-button
 					text
 					size="small"
-					class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+					class="text-apple-gray-600 dark:text-apple-gray-300 hover:text-apple-gray-900 dark:hover:text-white transition-colors"
 					@click="toggleSidebar"
 				>
 					<template #icon>
 						<Icon
 							icon="mdi:dock-left"
-							:width="16"
-							:height="16"
+							:width="18"
+							:height="18"
 						/>
 					</template>
 				</n-button>
@@ -249,14 +261,14 @@
 				<n-button
 					text
 					size="small"
-					class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+					class="text-apple-gray-600 dark:text-apple-gray-300 hover:text-apple-gray-900 dark:hover:text-white transition-colors"
 					@click="consoleStore.toggleVisibility()"
 				>
 					<template #icon>
 						<Icon
 							icon="mdi:console"
-							:width="16"
-							:height="16"
+							:width="18"
+							:height="18"
 						/>
 					</template>
 					Console
@@ -264,7 +276,7 @@
 						v-if="consoleStore.logs.length > 0"
 						:value="consoleStore.logs.length"
 						:max="99"
-						class="ml-1"
+						class="ml-1.5"
 						type="primary"
 					/>
 				</n-button>
@@ -275,7 +287,7 @@
 				<n-button
 					text
 					size="small"
-					class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+					class="text-apple-gray-600 dark:text-apple-gray-300 hover:text-apple-gray-900 dark:hover:text-white transition-colors"
 					@click="toggleLayoutMode"
 				>
 					<template #icon>
@@ -285,8 +297,8 @@
 									? 'mdi:view-split-vertical'
 									: 'mdi:view-split-horizontal'
 							"
-							:width="16"
-							:height="16"
+							:width="18"
+							:height="18"
 						/>
 					</template>
 				</n-button>
@@ -294,14 +306,14 @@
 				<n-button
 					text
 					size="small"
-					class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+					class="text-apple-gray-600 dark:text-apple-gray-300 hover:text-apple-gray-900 dark:hover:text-white transition-colors"
 					@click="showSettings = true"
 				>
 					<template #icon>
 						<Icon
 							icon="mdi:cog"
-							:width="16"
-							:height="16"
+							:width="18"
+							:height="18"
 						/>
 					</template>
 				</n-button>
@@ -313,7 +325,8 @@
 			v-model:show="showSettings"
 			preset="card"
 			title="Settings"
-			style="width: 900px"
+			style="width: 900px; border-radius: 18px; overflow: hidden;"
+			class="rounded-apple-xl shadow-apple-xl"
 		>
 			<SettingsPanel
 				v-model:active-section="settingsActiveSection"
@@ -348,8 +361,6 @@
 	import ResponsePanel from '@/components/ResponsePanel/ResponsePanel.vue'
 	import SettingsPanel from '@/components/Settings/SettingsPanel.vue'
 	import ConsolePanel from '@/components/Console/ConsolePanel.vue'
-	import VariablePicker from '@/components/VariablePicker.vue'
-	import VariableInput from '@/components/VariableInput.vue'
 	import VariableInputWithPills from '@/components/VariableInputWithPills.vue'
 	import TabBar from '@/components/TabBar/TabBar.vue'
 	import GroupDialog from '@/components/Dialogs/GroupDialog.vue'
@@ -484,24 +495,6 @@
 		}))
 	)
 
-	// Server options from OpenAPI spec
-	const serverOptions = computed(() => {
-		if (!apiDocsStore.spec || !apiDocsStore.spec.servers) {
-			return []
-		}
-		return apiDocsStore.spec.servers.map(server => ({
-			label: server.description || server.url,
-			value: server.url,
-		}))
-	})
-
-	// Handle server selection change
-	function handleServerChange(serverUrl: string) {
-		settingsStore.updateSetting('selectedServerUrl', serverUrl)
-		// Update serverPath variable
-		variablesStore.setServerPath(serverUrl)
-	}
-
 	// Handle endpoint selection from sidebar
 	function handleEndpointSelect(endpoint: Endpoint) {
 		// Check if endpoint.path is already a full URL
@@ -537,29 +530,6 @@
 		})
 
 		message.success(`Loaded ${endpoint.method} ${endpoint.path}`)
-	}
-
-	// Insert variable to URL input
-	function insertVariableToUrl(variableText: string) {
-		const input = urlInputRef.value?.inputElRef
-		if (!input) {
-			requestStore.currentRequest.url += variableText
-			return
-		}
-
-		const start = input.selectionStart || 0
-		const end = input.selectionEnd || 0
-		const currentUrl = requestStore.currentRequest.url
-
-		requestStore.currentRequest.url =
-			currentUrl.substring(0, start) + variableText + currentUrl.substring(end)
-
-		// Set cursor position after inserted text
-		setTimeout(() => {
-			const newPosition = start + variableText.length
-			input.setSelectionRange(newPosition, newPosition)
-			input.focus()
-		}, 0)
 	}
 
 	// Reload API docs
@@ -632,8 +602,8 @@
 	}
 
 	function handleCloseOtherTabs(tabId: string) {
-		const otherTabs = requestStore.tabs.filter((t) => t.id !== tabId)
-		otherTabs.forEach((tab) => requestStore.closeTab(tab.id))
+		const otherTabs = requestStore.tabs.filter(t => t.id !== tabId)
+		otherTabs.forEach(tab => requestStore.closeTab(tab.id))
 		message.success('Closed other tabs')
 	}
 
